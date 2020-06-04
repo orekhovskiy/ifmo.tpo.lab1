@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using ifmo.tpo.lab1.Models;
 
-namespace ifmo.tpo.lab1
+namespace ifmo.tpo.lab1.Commons
 {
     public class Settings
     {

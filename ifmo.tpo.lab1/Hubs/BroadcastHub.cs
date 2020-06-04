@@ -1,9 +1,7 @@
 ﻿using ifmo.tpo.lab1.Models;
+using ifmo.tpo.lab1.Commons;
 using Microsoft.AspNetCore.SignalR;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 
 namespace ifmo.tpo.lab1.Hubs
@@ -12,77 +10,20 @@ namespace ifmo.tpo.lab1.Hubs
     {
         public async Task GetSubscription(object? action, object? topic, object? errors, object? interval, object? format, object? order)
         {
-            object data = null;
-            await Clients.Caller.SendAsync("ReceiveSubscription", data);
-        }
-
-        private Result Parse(object? action, object? topic, object? errors, object? interval, object? format, object? order)
-        {
-            var error = "";
-            var options = new SubscriptionOptions();
-
-            var result = ParseString(action, Settings.Action);
-            if (result.Success)
+            var parseResult = Parser.Parse(action, topic, errors, interval, format, order);
+            if (parseResult.Success)
             {
-                options.Action = (string)result.Value;
+                while (true)
+                {
+                    var data = Requester.GetData((SubscriptionOptions)parseResult.Value);
+                    await Clients.Caller.SendAsync("ReceiveSubscription", data);
+                    //await Task.Delay();
+                }
             }
             else
             {
-                error += (string)result.Value;
-            }
-
-            result = ParseTopic(topic);
-
-            result = ParseString(errors, Settings.Errors);
-            if (result.Success)
-            {
-                options.Errors = (string)result.Value;
-            }
-            else
-            {
-                error += (string)result.Value;
-            }
-
-            return error == "" ? new Result(true, options) : new Result(false, error);
-        }
-
-        private Result ParseTopic(object topic)
-        {
-            return new Result();
-        }
-
-        private Result ParseString(object value, Option option)
-            => ParseString(value, option, true);
-
-        private Result ParseString(object value, Option option, bool nullable)
-        {
-            if (nullable == true && option.Default is null)
-            {
-                throw new Exception("Default value should not be null.");
-            }
-            if (value is null)
-            {
-                var error = $"Attribute with the '{option}' name required.\n";
-                return nullable == true ? new Result(true, option.Default) : new Result(false, error);
-            }
-            else if (!(value is string))
-            {
-                var error = $"Attribute with the '{option}' should be type of String.\n";
-                return new Result(false, error);
-            }
-            else 
-            {
-                if (option.Values.Contains((string)value))
-                {
-                    return new Result(true, value);
-                }
-                else
-                {
-                    var error = $"Value given to attribute '{option}' is incorrect.\n";
-                    return new Result(false, error);
-                }
+                await Clients.Caller.SendAsync("ReceiveError", parseResult.Value);
             }
         }
-        
     }
 }
