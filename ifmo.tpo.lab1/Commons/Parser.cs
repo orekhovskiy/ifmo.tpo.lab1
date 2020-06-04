@@ -14,6 +14,8 @@ namespace ifmo.tpo.lab1.Commons
             var options = new SubscriptionOptions();
 
             var result = ParseString(action, Settings.Action);
+            var test = (object)options.Action;
+            ParseResult(result, ref test, ref error);
             if (result.Success)
             {
                 options.Action = (string)result.Value;
@@ -38,7 +40,24 @@ namespace ifmo.tpo.lab1.Commons
             result = ParseInterval(interval);
 
             result = ParseString(format, Settings.Format);
+            if (result.Success)
+            {
+                options.Format = (string)result.Value;
+            }
+            else
+            {
+                error += (string)result.Value;
+            }
 
+            result = ParseString(format, Settings.Order);
+            if (result.Success)
+            {
+                options.Order = (string)result.Value;
+            }
+            else
+            {
+                error += (string)result.Value;
+            }
 
             return error == "" ? new Result(true, options) : new Result(false, error);
         }
@@ -48,7 +67,7 @@ namespace ifmo.tpo.lab1.Commons
             return new Result();
         }
 
-        private Result ParseInterval(object interval)
+        public static Result ParseInterval(object interval)
         {
             return new Result();
         }
@@ -83,6 +102,18 @@ namespace ifmo.tpo.lab1.Commons
                     var error = $"Value given to attribute '{option}' is incorrect.\n";
                     return new Result(false, error);
                 }
+            }
+        }
+
+        private static void ParseResult(Result result, ref object place, ref string error)
+        {
+            if (result.Success)
+            {
+                place = result.Value;
+            }
+            else
+            {
+                error += result.Value;
             }
         }
     }
