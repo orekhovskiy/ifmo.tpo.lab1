@@ -69,7 +69,20 @@ namespace ifmo.tpo.lab1.Commons
 
         public static Result ParseInterval(object interval)
         {
-            return new Result();
+            if (interval is null) 
+            {
+                return new Result(true, TimeSpan.FromDays(1));
+            }
+            if (interval is int) 
+            {
+                return new Result(true, TimeSpan.FromSeconds((int)interval));
+            }
+            if (interval is TimeSpan) 
+            {
+                return new Result(true, interval);
+            }
+            var error = $"Attribute with the 'Interval' name should be either string or DateTime.\n";
+            return new Result(false, error);
         }
 
         public static Result ParseString(object value, Option option)

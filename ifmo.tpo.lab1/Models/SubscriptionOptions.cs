@@ -10,7 +10,7 @@ namespace ifmo.tpo.lab1.Models
         public string Action { get; set; }
         public string Topic { get; set; }
         public string Errors { get; set; }
-        public DateTime Interval { get; set; }
+        public TimeSpan Interval { get; set; }
         public string Format { get; set; }
         public string Order { get; set; }
 
@@ -20,7 +20,7 @@ namespace ifmo.tpo.lab1.Models
         }
 
         public SubscriptionOptions(string action, string topic, string errors,
-            DateTime interval, string format, string order)
+            TimeSpan interval, string format, string order)
         {
             Action = action;
             Topic = topic;
