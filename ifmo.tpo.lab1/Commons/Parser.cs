@@ -11,52 +11,66 @@ namespace ifmo.tpo.lab1.Commons
         public static Result Parse(object? action, object? topic, object? errors, object? interval, object? format, object? order)
         {
             var error = "";
-            var options = new SubscriptionOptions();
+            var options = new Dictionary<SubscriptionOptions, object>();
 
             var result = ParseString(action, Settings.Action);
-            var test = (object)options.Action;
-            ParseResult(result, ref test, ref error);
             if (result.Success)
             {
-                options.Action = (string)result.Value;
+                options.Add(SubscriptionOptions.Action, result.Value);
             }
             else
             {
-                error += (string)result.Value;
+                error += result.Value;
             }
 
             result = ParseTopic(topic);
+            if (result.Success)
+            {
+                options.Add(SubscriptionOptions.Topic, result.Value);
+            }
+            else
+            {
+                error += result.Value;
+            }
 
             result = ParseString(errors, Settings.Errors);
             if (result.Success)
             {
-                options.Errors = (string)result.Value;
+                options.Add(SubscriptionOptions.Errors, result.Value);
             }
             else
             {
-                error += (string)result.Value;
+                error += result.Value;
             }
 
             result = ParseInterval(interval);
-
-            result = ParseString(format, Settings.Format);
             if (result.Success)
             {
-                options.Format = (string)result.Value;
+                options.Add(SubscriptionOptions.Interval, result.Value);
             }
             else
             {
-                error += (string)result.Value;
+                error += result.Value;
             }
 
-            result = ParseString(format, Settings.Order);
+            result = ParseString(errors, Settings.Format);
             if (result.Success)
             {
-                options.Order = (string)result.Value;
+                options.Add(SubscriptionOptions.Format, result.Value);
             }
             else
             {
-                error += (string)result.Value;
+                error += result.Value;
+            }
+
+            result = ParseString(errors, Settings.Order);
+            if (result.Success)
+            {
+                options.Add(SubscriptionOptions.Order, result.Value);
+            }
+            else
+            {
+                error += result.Value;
             }
 
             return error == "" ? new Result(true, options) : new Result(false, error);
@@ -64,7 +78,25 @@ namespace ifmo.tpo.lab1.Commons
 
         public static Result ParseTopic(object topic)
         {
-            return new Result();
+            if (topic is null)
+            {
+                var error = "Attribute with the 'Topic' name required.\n";
+                return new Result(false, error);
+            }
+            if (!(topic is string))
+            {
+                var error = "Attribute with the 'Topic' name should be type of String.\n";
+            }
+            // TODO: wiki check
+            if (Requester.WikiCheck((string)topic))
+            {
+                return new Result(true, topic);
+            }
+            else
+            {
+                var error = "No data found by given value of the attribute named 'Topic'.\n";
+                return new Result(false, error);
+            }
         }
 
         public static Result ParseInterval(object interval)
@@ -81,7 +113,7 @@ namespace ifmo.tpo.lab1.Commons
             {
                 return new Result(true, interval);
             }
-            var error = $"Attribute with the 'Interval' name should be either string or DateTime.\n";
+            var error = "Attribute with the 'Interval' name should be either Int or TimeSpan.\n";
             return new Result(false, error);
         }
 
@@ -92,7 +124,7 @@ namespace ifmo.tpo.lab1.Commons
         {
             if (nullable == true && option.Default is null)
             {
-                throw new Exception("Default value should not be null.");
+                throw new NullReferenceException("Default value should not be null.");
             }
             if (value is null)
             {

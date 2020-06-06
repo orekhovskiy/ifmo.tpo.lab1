@@ -12,5 +12,11 @@ namespace ifmo.tpo.lab1.Commons
         {
             return null;
         }
+
+        public static bool WikiCheck(string topic)
+        {
+            // TODO:
+            return false;
+        }
     }
 }
