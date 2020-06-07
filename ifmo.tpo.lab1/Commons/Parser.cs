@@ -149,17 +149,5 @@ namespace ifmo.tpo.lab1.Commons
                 }
             }
         }
-
-        private static void ParseResult(Result result, ref object place, ref string error)
-        {
-            if (result.Success)
-            {
-                place = result.Value;
-            }
-            else
-            {
-                error += result.Value;
-            }
-        }
     }
 }
