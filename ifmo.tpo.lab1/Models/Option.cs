@@ -10,9 +10,11 @@ namespace ifmo.tpo.lab1.Models
     {
         public string Default { get; }
         public List<string> Values { get; }
+        public string AttributeName { get; }
 
-        public Option(List<string> values, string def)
+        public Option(string name, List<string> values, string def)
         {
+            AttributeName = name;
             Values = values;
             Default = def;
         }

@@ -5,19 +5,23 @@ var connection = new signalR.HubConnectionBuilder().withUrl("/broadcast").build(
 //Disable send button until connection is established
 document.getElementById("sendButton").disabled = true;
 
-connection.on("ReceiveMessage", function (user, message) {
-    var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    var encodedMsg = user + " says " + msg;
-    var li = document.createElement("li");
-    li.textContent = encodedMsg;
-    document.getElementById("messagesList").appendChild(li);
+connection.on("ReceiveError", function (message) {
+    document.getElementById("messagesList").innerHTML = "";
+    document.getElementById("errorsList").innerHTML = "";
+    for (var i = 0; i < message.length; i++) {
+        var msg = message[i].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        var li = document.createElement("li");
+        li.textContent = msg;
+        document.getElementById("errorsList").appendChild(li);
+    }
 });
 
-connectiom.on("ReceiveError", function (message) {
+connection.on("ReceiveSubscription", function (message) {
+    document.getElementById("errorsList").innerHTML = "";
     var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     var li = document.createElement("li");
     li.textContent = msg;
-    document.getElementById("messageList").appendChild(li);
+    document.getElementById("messagesList").appendChild(li);
 });
 
 connection.start().then(function () {
@@ -27,6 +31,14 @@ connection.start().then(function () {
 });
 
 document.getElementById("sendButton").addEventListener("click", function (event) {
+    var action = document.getElementById("actionInput").value == "" ? null : document.getElementById("actionInput").value;
+    var topic = document.getElementById("topicInput").value == "" ? null : document.getElementById("topicInput").value;
+    var errors = document.getElementById("errorsInput").value == "" ? null : document.getElementById("errorsInput").value;
+    var interval = document.getElementById("intervalInput").value == "" ? null : document.getElementById("intervalInput").value;
+    var format = document.getElementById("formatInput").value == "" ? null : document.getElementById("formatInput").value;
+    var order = document.getElementById("orderInput").value == "" ? null : document.getElementById("orderInput").value;
+
+    connection.invoke("GetSubscription", action, topic, errors, interval, format, order);
     /*var user = document.getElementById("userInput").value;
     var message = document.getElementById("messageInput").value;
     connection.invoke("SendMessage", user, message).catch(function (err) {

@@ -1,8 +1,12 @@
 ﻿using ifmo.tpo.lab1.Models;
 using ifmo.tpo.lab1.Commons;
+using static ifmo.tpo.lab1.Commons.Settings;
+using static ifmo.tpo.lab1.Commons.Errors;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace ifmo.tpo.lab1.Hubs
 {
@@ -16,22 +20,30 @@ namespace ifmo.tpo.lab1.Hubs
         public async Task GetSubscription(object? action, object? topic, 
             object? errors, object? interval, object? format, object? order)
         {
-            await Clients.Caller.SendAsync("ReceiveError", 
-                $"{action} {topic} {errors} {interval} {format} {order}");
-            return;
             var parseResult = Parser.Parse(action, topic, errors, interval, format, order);
             if (parseResult.Success)
             {
+                var dictionary = (Dictionary<SubscriptionOptions, object>)parseResult.Value;
+                var delayTime = (TimeSpan)dictionary[SubscriptionOptions.Interval];
                 while (true)
                 {
-                    var data = Requester.GetData((SubscriptionOptions)parseResult.Value);
+                    var data = await Requester.GetData((Dictionary<SubscriptionOptions, object>)parseResult.Value);
                     await Clients.Caller.SendAsync("ReceiveSubscription", data);
-                    //await Task.Delay();
+                    await Task.Delay(delayTime);
                 }
             }
             else
             {
-                await Clients.Caller.SendAsync("ReceiveError", parseResult.Value);
+                var parsedErrors = Parser.ParseString(errors, Settings.Errors);
+                if (parsedErrors.Success & (string)parsedErrors.Value == "detailed")
+                {
+                    await Clients.Caller.SendAsync("ReceiveError", parseResult.Value);
+                }
+                else
+                {
+                    var generalError = GiveGeneralError();
+                    await Clients.Caller.SendAsync("ReceiveError", new List<string>() { generalError });
+                }
             }
         }
     }

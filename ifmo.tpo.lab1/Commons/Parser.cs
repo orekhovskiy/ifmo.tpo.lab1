@@ -1,4 +1,5 @@
 ﻿using ifmo.tpo.lab1.Models;
+using static ifmo.tpo.lab1.Commons.Errors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace ifmo.tpo.lab1.Commons
     {
         public static Result Parse(object? action, object? topic, object? errors, object? interval, object? format, object? order)
         {
-            var error = "";
+            var error = new List<string>();
             var options = new Dictionary<SubscriptionOptions, object>();
 
             var result = ParseString(action, Settings.Action);
@@ -20,7 +21,7 @@ namespace ifmo.tpo.lab1.Commons
             }
             else
             {
-                error += result.Value;
+                error.Add((string)result.Value);
             }
 
             result = ParseTopic(topic);
@@ -30,7 +31,7 @@ namespace ifmo.tpo.lab1.Commons
             }
             else
             {
-                error += result.Value;
+                error.Add((string)result.Value);
             }
 
             result = ParseString(errors, Settings.Errors);
@@ -40,7 +41,7 @@ namespace ifmo.tpo.lab1.Commons
             }
             else
             {
-                error += result.Value;
+                error.Add((string)result.Value);
             }
 
             result = ParseInterval(interval);
@@ -50,53 +51,64 @@ namespace ifmo.tpo.lab1.Commons
             }
             else
             {
-                error += result.Value;
+                error.Add((string)result.Value);
             }
 
-            result = ParseString(errors, Settings.Format);
+            result = ParseString(format, Settings.Format);
             if (result.Success)
             {
                 options.Add(SubscriptionOptions.Format, result.Value);
             }
             else
             {
-                error += result.Value;
+                error.Add((string)result.Value);
             }
 
-            result = ParseString(errors, Settings.Order);
+            result = ParseString(order, Settings.Order);
             if (result.Success)
             {
                 options.Add(SubscriptionOptions.Order, result.Value);
             }
             else
             {
-                error += result.Value;
+                error.Add((string)result.Value);
             }
 
-            return error == "" ? new Result(true, options) : new Result(false, error);
+            return error.Count() == 0 ? new Result(true, options) : new Result(false, error);
         }
 
         public static Result ParseTopic(object topic)
         {
             if (topic is null)
             {
-                var error = "Attribute with the 'Topic' name required.\n";
+                var error = GiveAttributeRequiredError("Topic");
                 return new Result(false, error);
             }
-            if (!(topic is string))
+            if (topic is System.Text.Json.JsonElement json)
             {
-                var error = "Attribute with the 'Topic' name should be type of String.\n";
-            }
-            // TODO: wiki check
-            if (Requester.WikiCheck((string)topic))
-            {
-                return new Result(true, topic);
+                /*if (!(topic is string))
+                {
+                    var error = GiveWrongTypeError("Topic", "string");
+                    return new Result(false, error);
+                }*/
+                var value = json.GetString();
+                // TODO: wiki check
+                if (Requester.WikiCheck(value))
+                {
+                    return new Result(true, value);
+                }
+                else
+                {
+                    var error = GiveNoDataFoundError("Topic", value);
+                    return new Result(false, error);
+                }
             }
             else
             {
-                var error = "No data found by given value of the attribute named 'Topic'.\n";
+                var error = GiveUnsupportedTypeError("Topic");
                 return new Result(false, error);
             }
+            
         }
 
         public static Result ParseInterval(object interval)
@@ -105,16 +117,24 @@ namespace ifmo.tpo.lab1.Commons
             {
                 return new Result(true, TimeSpan.FromDays(1));
             }
-            if (interval is int) 
+            if (interval is System.Text.Json.JsonElement json)
             {
-                return new Result(true, TimeSpan.FromSeconds((int)interval));
+                int value;
+                if (int.TryParse(json.GetString(), out value))
+                {
+                    return new Result(true, TimeSpan.FromSeconds(value));
+                }
+                else
+                {
+                    var error = GiveWrongTypeError("Interval", "Integer");
+                    return new Result(false, error);
+                }
             }
-            if (interval is TimeSpan) 
+            else
             {
-                return new Result(true, interval);
+                var error = GiveUnsupportedTypeError("Interval");
+                return new Result(false, error);
             }
-            var error = "Attribute with the 'Interval' name should be either Int or TimeSpan.\n";
-            return new Result(false, error);
         }
 
         public static Result ParseString(object value, Option option)
@@ -122,31 +142,34 @@ namespace ifmo.tpo.lab1.Commons
 
         public static Result ParseString(object value, Option option, bool nullable)
         {
-            if (nullable == true && option.Default is null)
-            {
-                throw new NullReferenceException("Default value should not be null.");
-            }
             if (value is null)
             {
-                var error = $"Attribute with the '{option}' name required.\n";
+                var error = GiveAttributeRequiredError(option.AttributeName);
                 return nullable == true ? new Result(true, option.Default) : new Result(false, error);
             }
-            else if (!(value is string))
+
+            if (value is System.Text.Json.JsonElement json)
             {
-                var error = $"Attribute with the '{option}' should be type of String.\n";
-                return new Result(false, error);
-            }
-            else
-            {
-                if (option.Values.Contains((string)value))
+                /*if (!(value is string))
                 {
-                    return new Result(true, value);
+                    var error = GiveWrongTypeError(option.AttributeName, "string");
+                    return new Result(false, error);
+                }*/
+                var strValue = json.GetString();
+                if (option.Values.Contains(strValue))
+                {
+                    return new Result(true, strValue);
                 }
                 else
                 {
-                    var error = $"Value given to attribute '{option}' is incorrect.\n";
+                    var error = GiveWrongOptionError(option.AttributeName);
                     return new Result(false, error);
                 }
+            }
+            else
+            {
+                var error = GiveUnsupportedTypeError(option.AttributeName);
+                return new Result(false, error);
             }
         }
     }
