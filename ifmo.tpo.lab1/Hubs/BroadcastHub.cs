@@ -1,7 +1,8 @@
 ﻿using ifmo.tpo.lab1.Models;
 using ifmo.tpo.lab1.Commons;
-using static ifmo.tpo.lab1.Commons.Settings;
-using static ifmo.tpo.lab1.Commons.Errors;
+using ifmo.tpo.lab1.Settings;
+using static ifmo.tpo.lab1.Settings.AttributeOptions;
+using static ifmo.tpo.lab1.Settings.Errors;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
@@ -17,8 +18,8 @@ namespace ifmo.tpo.lab1.Hubs
             await Clients.All.SendAsync("ReceiveMessage", user, message);
         }
 
-        public async Task GetSubscription(object? action, object? topic, 
-            object? errors, object? interval, object? format, object? order)
+        public async Task GetSubscription(string action, string topic,
+            string errors, string interval, string format, string order)
         {
             var parseResult = Parser.Parse(action, topic, errors, interval, format, order);
             if (parseResult.Success)
@@ -34,7 +35,7 @@ namespace ifmo.tpo.lab1.Hubs
             }
             else
             {
-                var parsedErrors = Parser.ParseString(errors, Settings.Errors);
+                var parsedErrors = Parser.ParseString(errors, AttributeOptions.Errors);
                 if (parsedErrors.Success & (string)parsedErrors.Value == "detailed")
                 {
                     await Clients.Caller.SendAsync("ReceiveError", parseResult.Value);

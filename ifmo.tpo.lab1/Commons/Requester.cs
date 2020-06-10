@@ -1,12 +1,7 @@
-﻿using ifmo.tpo.lab1.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Collections.Generic;
 using System.Net.Http;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
 using System.Threading.Tasks;
+using ifmo.tpo.lab1.Settings;
 
 namespace ifmo.tpo.lab1.Commons
 {
@@ -22,24 +17,38 @@ namespace ifmo.tpo.lab1.Commons
 
         private static HttpClient client = new HttpClient();
 
-        public static async Task<object> GetData(Dictionary<SubscriptionOptions, object> options)
+        public static List<string> GetPages(string topic)
         {
-            var pages = await GetPages((string)options[SubscriptionOptions.Topic]);
+            var pages = new List<string>();
+            return pages;
+        }
+
+        public static object GetPageByTitle(string title)
+        {
             return null;
         }
 
-        public static bool WikiCheck(string topic)
+        public static async Task<object> GetData(Dictionary<SubscriptionOptions, object> options)
+        {
+            var pages = await GetSMTh((string)options[SubscriptionOptions.Topic]);
+            return null;
+        }
+
+        public static bool IsTopicExists(string topic)
         {
             // TODO:
+            if (topic == "abcabcabc") return false;
+            if (topic == "Test") return false;
             return true;
         }
 
-        private static async Task<List<string>>GetPages(string topic)
+        private static async Task<List<string>>GetSMTh(string topic)
         {
             var pages = new List<string>();
-            var query = GetListUrl(topic);
+            //var query = GetListUrl(topic);
 
-            //var query = "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles=Stack%20Overflow";
+            var query = "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&exintro=&titles=Stack_Overflow";
+            query = query.Replace(" ", "_");
             var json = await GetRequest<string>(query);
             
             return pages;
@@ -48,7 +57,7 @@ namespace ifmo.tpo.lab1.Commons
         private static async Task<T> GetRequest<T>(string url)
         {
             HttpResponseMessage responce = await client.GetAsync(url);
-            if (responce.IsSuccessStatusCode)
+                if (responce.IsSuccessStatusCode)
             {
                 return await responce.Content.ReadAsAsync<T>();
             }

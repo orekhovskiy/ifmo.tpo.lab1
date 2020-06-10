@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ifmo.tpo.lab1.Commons
+namespace ifmo.tpo.lab1.Settings
 {
     public enum SubscriptionOptions
     {

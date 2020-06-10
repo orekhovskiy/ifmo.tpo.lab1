@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ifmo.tpo.lab1.Commons
+namespace ifmo.tpo.lab1.Settings
 {
     public static class Errors
     {
@@ -17,6 +17,10 @@ namespace ifmo.tpo.lab1.Commons
             => $"Attribute with the '{attr}' name required.";
         public static string GiveWrongOptionError(string attr)
             => $"Value given to attribute '{attr}' is unexpected.";
+        public static string GiveNegativeIntervalError()
+            => $"Value given to attribute 'Interval' can not be negative.";
+        public static string GiveZeroIntervalError()
+            => $"Value given to attribute 'Interval' can not be zero.";
         public static string GiveGeneralError()
             => $"An error occured";
     }
