@@ -54,6 +54,7 @@ namespace ifmo.tpo.lab1
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapControllers();
                 endpoints.MapHub<BroadcastHub>("/broadcast");
             });
         }

@@ -13,22 +13,30 @@ namespace ifmo.tpo.lab1.Hubs
 {
     public class BroadcastHub : Hub
     {
-        public async Task SendMessage(string user, string message)
-        {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
-        }
-
         public async Task GetSubscription(string action, string topic,
             string errors, string interval, string format, string order)
         {
-            var parseResult = Parser.Parse(action, topic, errors, interval, format, order);
+            var parseResult = await Parser.Parse(action, topic, errors, interval, format, order);
             if (parseResult.Success)
             {
                 var dictionary = (Dictionary<SubscriptionOptions, object>)parseResult.Value;
                 var delayTime = (TimeSpan)dictionary[SubscriptionOptions.Interval];
-                while (true)
+                var parsedFormat = (string)dictionary[SubscriptionOptions.Format];
+                var parsedOrder = (string)dictionary[SubscriptionOptions.Order];
+
+                var parsedAction = (string) dictionary[SubscriptionOptions.Action];
+                if (parsedAction == "help")
                 {
-                    var data = await Requester.GetData((Dictionary<SubscriptionOptions, object>)parseResult.Value);
+                    var helpMessage = GetHelp();
+                    await Clients.Caller.SendAsync("ReceiveResponse", new List<string>() { helpMessage });
+                }
+
+                var pages = await Requester.GetPages(topic);
+                pages = SortPages(pages, parsedOrder);
+
+                foreach (var pageTitle in pages)
+                {
+                    var data = Requester.GetPageByTitleLink(pageTitle, parsedFormat);
                     await Clients.Caller.SendAsync("ReceiveSubscription", data);
                     await Task.Delay(delayTime);
                 }
@@ -38,14 +46,42 @@ namespace ifmo.tpo.lab1.Hubs
                 var parsedErrors = Parser.ParseString(errors, AttributeOptions.Errors);
                 if (parsedErrors.Success & (string)parsedErrors.Value == "detailed")
                 {
-                    await Clients.Caller.SendAsync("ReceiveError", parseResult.Value);
+                    await Clients.Caller.SendAsync("ReceiveResponse", parseResult.Value);
                 }
                 else
                 {
                     var generalError = GiveGeneralError();
-                    await Clients.Caller.SendAsync("ReceiveError", new List<string>() { generalError });
+                    await Clients.Caller.SendAsync("ReceiveResponse", new List<string>() { generalError });
                 }
             }
         }
+
+        private List<string> SortPages(List<string> pages, string order)
+        {
+            switch (order)
+            {
+                case "alphabet":
+                    pages.Sort();
+                    break;
+                case "random":
+                    var rng = new Random();
+                    int n = pages.Count;
+                    while (n > 1)
+                    {
+                        n--;
+                        int k = rng.Next(n + 1);
+                        var value = pages[k];
+                        pages[k] = pages[n];
+                        pages[n] = value;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return pages;
+        }
+
+        private string GetHelp()
+            => "Help";
     }
 }

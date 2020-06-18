@@ -4,12 +4,13 @@ using ifmo.tpo.lab1.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ifmo.tpo.lab1.Commons
 {
     public static class Parser
     {
-        public static Result Parse(string action, string topic, string errors, string interval, string format, string order)
+        public static async Task<Result> Parse(string action, string topic, string errors, string interval, string format, string order)
         {
             var error = new List<string>();
             var options = new Dictionary<SubscriptionOptions, object>();
@@ -24,7 +25,7 @@ namespace ifmo.tpo.lab1.Commons
                 error.Add((string)result.Value);
             }
 
-            result = ParseTopic(topic);
+            result = await ParseTopic(topic, action);
             if (result.Success)
             {
                 options.Add(SubscriptionOptions.Topic, result.Value);
@@ -77,15 +78,16 @@ namespace ifmo.tpo.lab1.Commons
             return error.Any() ? new Result(false, error): new Result(true, options);
         }
 
-        public static Result ParseTopic(string topic)
+        public static async Task<Result> ParseTopic(string topic, string action)
         {
             if (topic is null)
             {
                 var error = GiveAttributeRequiredError("Topic");
-                return new Result(false, error);
+                return action == "help" ? new Result(true) : new Result(false, error);
             }
             // TODO: wiki check
-            if (Requester.IsTopicExists(topic))
+            var isTopicExists = await Requester.IsTopicExists(topic);
+            if (isTopicExists)
             {
                 return new Result(true, topic);
             }

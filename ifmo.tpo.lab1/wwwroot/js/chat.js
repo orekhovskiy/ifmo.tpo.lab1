@@ -5,8 +5,9 @@ var connection = new signalR.HubConnectionBuilder().withUrl("/broadcast").build(
 //Disable send button until connection is established
 document.getElementById("sendButton").disabled = true;
 
-connection.on("ReceiveError", function (message) {
-    document.getElementById("messagesList").innerHTML = "";
+connection.on("ReceiveResponse", function (message) {
+    document.getElementById("messages").innerHTML = "";
+    document.getElementById("errorsList").hidden = false;
     document.getElementById("errorsList").innerHTML = "";
     for (var i = 0; i < message.length; i++) {
         var msg = message[i].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -16,12 +17,10 @@ connection.on("ReceiveError", function (message) {
     }
 });
 
-connection.on("ReceiveSubscription", function (message) {
+connection.on("ReceiveSubscription", function (data) {
+    document.getElementById("errorsList").hidden = true;
     document.getElementById("errorsList").innerHTML = "";
-    var msg = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    var li = document.createElement("li");
-    li.textContent = msg;
-    document.getElementById("messagesList").appendChild(li);
+    document.getElementById("messages").innerHTML += "<p><a href=\"" + data + "\">" + data +"</a></p>"
 });
 
 connection.start().then(function () {
