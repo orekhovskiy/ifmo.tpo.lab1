@@ -13,6 +13,24 @@ namespace ifmo.tpo.lab1.Hubs
 {
     public class BroadcastHub : Hub
     {
+        public async Task BroadcastPageTitle(string topic, int interval)
+        {
+            if (await Requester.IsTopicExists(topic))
+            {
+                var pageTitles = await Requester.GetPages(topic);
+                foreach (var title in pageTitles)
+                {
+                    await Clients.Caller.SendAsync("receivePageTitle", title);
+                    await Task.Delay(TimeSpan.FromSeconds(interval));
+                }
+            }
+            else
+            {
+                await Clients.Caller.SendAsync("receivePageTitle", "Unacceptable topic name");
+            }
+        }
+
+
         public async Task GetSubscription(string action, string topic,
             string errors, string interval, string format, string order)
         {

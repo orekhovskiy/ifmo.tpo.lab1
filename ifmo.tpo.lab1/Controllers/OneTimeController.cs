@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ifmo.tpo.lab1.Commons;
@@ -12,13 +13,14 @@ namespace ifmo.tpo.lab1.Controllers
     {
         // https://localhost:44395/api/onetime/page?title=Football&format=html
         [HttpGet]
-        [ActionName("Page")]
+        [ActionName("GetPageByTitle")]
         public async Task<string> GetPageByTitle([FromQuery] string title, [FromQuery] string format)
         {
             if (format != "html" && format != "title")
             {
                 return "Wrong format.";
             }
+
             var page = await Requester.GetPageByTitle(title, format);
             return page ?? "No data found.";
         }
@@ -35,5 +37,15 @@ namespace ifmo.tpo.lab1.Controllers
             var page = await Requester.GetPageByTitle(title, "html");
             return page;
         }
+
+        [HttpGet]
+        [ActionName("IsTopicExists")]
+        public async Task<bool> IsTopicExists([FromQuery] string topic)
+            => await Requester.IsTopicExists(topic);
+
+        [HttpGet]
+        [ActionName("GetPagesByTopic")]
+        public async Task<List<string>> GetPagesByTopic([FromQuery] string topic)
+            => await Requester.GetPages(topic);
     }
 }
